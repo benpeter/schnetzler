@@ -67,6 +67,64 @@ export function localizeLinks(container) {
 }
 
 /**
+ * Points a picture's sources at media-bus renditions of the given widths, so the browser
+ * picks the rendition that matches the rendered size (w descriptors + sizes).
+ * The element is changed in place, so no second request is triggered for the same image.
+ * @param {HTMLPictureElement} picture The picture element
+ * @param {number[]} widths Rendition widths in px
+ * @param {string} sizes The sizes attribute describing the rendered width
+ */
+export function setResponsiveSources(picture, widths, sizes) {
+  const img = picture && picture.querySelector('img');
+  if (!img) return;
+  const { origin, pathname } = new URL(img.getAttribute('src'), window.location.href);
+  if (!pathname.includes('/media_')) return;
+  const base = `${origin}${pathname}`;
+  const ext = pathname.split('.').pop().toLowerCase();
+  const fallback = ext === 'png' || ext === 'gif' ? 'png' : 'jpg';
+  const set = (format) => widths.map((w) => `${base}?width=${w}&format=${format}&optimize=medium ${w}w`).join(', ');
+
+  picture.querySelectorAll('source').forEach((source) => source.remove());
+  const webp = document.createElement('source');
+  webp.type = 'image/webp';
+  webp.srcset = set('webply');
+  webp.sizes = sizes;
+  picture.prepend(webp);
+  img.srcset = set(fallback);
+  img.sizes = sizes;
+}
+
+// hero image slot: full width minus gutters below 900px, 1.1fr of a two-column grid above
+const HERO_IMAGE_WIDTHS = [400, 540, 640, 800, 1080, 1280];
+const HERO_IMAGE_SIZES = '(min-width: 1160px) 532px, (min-width: 900px) calc((100vw - 144px) * 0.524), calc(100vw - 48px)';
+
+/**
+ * Prepares the LCP candidate before the first section is shown: the first image of a hero
+ * in the first section is loaded eagerly, with high priority and a matching rendition.
+ * @param {Element} main The main element
+ */
+function prepareLcpImage(main) {
+  const first = main.querySelector(':scope > div');
+  const picture = first && first.querySelector('picture');
+  const img = picture && picture.querySelector('img');
+  if (!img) return;
+  if (picture.closest('.hero')) setResponsiveSources(picture, HERO_IMAGE_WIDTHS, HERO_IMAGE_SIZES);
+  img.loading = 'eager';
+  img.fetchPriority = 'high';
+}
+
+export { HERO_IMAGE_WIDTHS, HERO_IMAGE_SIZES };
+
+/**
+ * Runs a callback in the delayed phase (after the page has loaded and settled).
+ * @param {Function} fn The callback
+ */
+export function onDelayed(fn) {
+  if (window.hlx && window.hlx.delayedPhase) fn();
+  else document.addEventListener('aem:delayed', () => fn(), { once: true });
+}
+
+/**
  * load fonts.css and set a session storage flag
  */
 async function loadFonts() {
@@ -230,6 +288,7 @@ async function loadEager(doc) {
     skip.href = '#main';
     skip.textContent = 'Zum Inhalt springen';
     doc.body.prepend(skip);
+    prepareLcpImage(main);
     decorateMain(main);
     document.body.classList.add('appear');
     await loadSection(main.querySelector('.section'), waitForFirstImage);
@@ -270,8 +329,12 @@ async function loadLazy(doc) {
  * without impacting the user experience.
  */
 function loadDelayed() {
-  import('./consent-check.js');
-  // load anything that can be postponed to the latest here
+  window.setTimeout(() => {
+    window.hlx.delayedPhase = true;
+    document.dispatchEvent(new CustomEvent('aem:delayed'));
+    import('./consent-check.js');
+    // load anything that can be postponed to the latest here
+  }, 3000);
 }
 
 async function loadPage() {

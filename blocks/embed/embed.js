@@ -78,7 +78,13 @@ export default function decorate(block) {
   if (provider) {
     frame.append(buildFacade(provider, url.match(provider.match)[1], title, poster));
   } else if (/\.mp4(\?|$)/i.test(url)) {
-    frame.append(buildVideo(url, title));
+    // the player (and its metadata download) is only created once the video is near the viewport
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return;
+      observer.disconnect();
+      frame.append(buildVideo(url, title));
+    }, { rootMargin: '300px 0px' });
+    observer.observe(frame);
   } else {
     frame.append(link);
   }

@@ -1,9 +1,15 @@
+import {
+  onDelayed, setResponsiveSources, HERO_IMAGE_WIDTHS, HERO_IMAGE_SIZES,
+} from '../../scripts/scripts.js';
+
 const ROTATE_MS = 6000;
 
 /**
  * Crossfades through the hero images; pausable and off for reduced motion.
+ * Only the first image is part of the initial page; the others are added and the
+ * rotation starts in the delayed phase, so they never compete with the LCP image.
  * @param {Element} media The media container
- * @param {Element[]} pictures The pictures to rotate
+ * @param {Element[]} pictures The pictures to rotate (first one already in media)
  */
 function rotate(media, pictures) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -11,6 +17,8 @@ function rotate(media, pictures) {
 
   let index = 0;
   let timer;
+  let started = false;
+  let playing = true;
   const show = (i) => {
     pictures[index].classList.remove('is-active');
     index = (i + pictures.length) % pictures.length;
@@ -22,25 +30,32 @@ function rotate(media, pictures) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'hero-pause';
-  const setState = (playing) => {
-    button.setAttribute('aria-pressed', playing ? 'false' : 'true');
-    button.setAttribute('aria-label', playing ? 'Bildwechsel anhalten' : 'Bildwechsel fortsetzen');
-    button.dataset.state = playing ? 'playing' : 'paused';
+  const setState = (on) => {
+    playing = on;
+    button.setAttribute('aria-pressed', on ? 'false' : 'true');
+    button.setAttribute('aria-label', on ? 'Bildwechsel anhalten' : 'Bildwechsel fortsetzen');
+    button.dataset.state = on ? 'playing' : 'paused';
   };
   button.addEventListener('click', () => {
-    const playing = button.dataset.state === 'playing';
-    if (playing) stop(); else start();
+    if (playing) stop(); else if (started) start();
     setState(!playing);
   });
   setState(true);
   media.append(button);
 
-  // lazy images beyond the first only load once rotation is about to show them
-  pictures.slice(1).forEach((pic) => {
-    const img = pic.querySelector('img');
-    if (img) img.loading = 'lazy';
+  onDelayed(() => {
+    pictures.slice(1).forEach((pic) => {
+      setResponsiveSources(pic, HERO_IMAGE_WIDTHS, HERO_IMAGE_SIZES);
+      const img = pic.querySelector('img');
+      if (img) {
+        img.loading = 'eager';
+        img.decoding = 'async';
+      }
+      button.before(pic);
+    });
+    started = true;
+    if (playing) start();
   });
-  start();
 }
 
 /**
@@ -73,8 +88,9 @@ export default function decorate(block) {
   pictures.forEach((pic, i) => {
     pic.classList.add('hero-image');
     if (i === 0) pic.classList.add('is-active');
-    media.append(pic);
+    else pic.remove(); // added back in the delayed phase
   });
+  if (pictures[0]) media.append(pictures[0]);
 
   block.replaceChildren(content);
   if (pictures.length) {
