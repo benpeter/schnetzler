@@ -130,6 +130,18 @@ function hoistContactForm(element) {
   });
 }
 
+// Outdated practice address (Impressum, Datenschutz) -> current address, as in the site footer.
+const ADDRESS_CORRECTIONS = [[/Haspelstra(?:ß|ss)e\s+13/g, 'Universitätsstr. 38']];
+
+function correctAddress(element, doc) {
+  collectTextNodes(doc, element).forEach((node) => {
+    ADDRESS_CORRECTIONS.forEach(([from, to]) => {
+      if (from.test(node.nodeValue)) node.nodeValue = node.nodeValue.replace(from, to);
+      from.lastIndex = 0;
+    });
+  });
+}
+
 function removeHoneypotText(element, doc) {
   collectTextNodes(doc, element).forEach((node) => {
     if (node.nodeValue.includes('[honeypot website]')) {
@@ -334,6 +346,7 @@ export default function transform(hookName, element, payload) {
     WebImporter.DOMUtils.remove(element, ['a.carousel-control', 'i.fa']);
     cleanMediaElement(element);
     hoistContactForm(element);
+    correctAddress(element, doc);
     removeHoneypotText(element, doc);
 
     fixImages(element);
