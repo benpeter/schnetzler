@@ -66,8 +66,9 @@ function setupRotation(block, list, items) {
 
   const controls = document.createElement('div');
   controls.className = 'quotes-controls';
+  // position is announced to screen readers only, together with the newly shown quote
   const status = document.createElement('p');
-  status.className = 'quotes-status';
+  status.className = 'quotes-status quotes-sr-only';
 
   const show = (i) => {
     items[index].hidden = true;
@@ -87,14 +88,15 @@ function setupRotation(block, list, items) {
       return button;
     });
 
-  controls.append(status, ...buttons);
+  controls.append(...buttons);
   items.forEach((item) => { item.hidden = true; });
   items[index].hidden = false;
   status.textContent = `Zitat ${index + 1} von ${items.length}`;
 
-  // the newly shown quote is announced when stepping
+  // the position and the newly shown quote are announced when stepping
   list.setAttribute('aria-live', 'polite');
-  block.prepend(controls);
+  list.prepend(status);
+  block.append(controls);
 }
 
 let quotesCount = 0;
