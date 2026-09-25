@@ -7,7 +7,7 @@
  * moved out of its contact column by praxis-schnetzler-cleanup.js (blocks cannot nest).
  *
  * Output table (DA block name "Contact Form"):
- *   row 1: link to the form endpoint (authored; placeholder until the real Worker URL is known)
+ *   row 1: link to the form endpoint (authored; the practice's Cloudflare Worker)
  *   rows 2+: field key | label, taken from the source form's <label> texts
  *            (name, email, subject, message) plus the submit button text (submit)
  *
@@ -16,7 +16,7 @@
  * its own honeypot field.
  */
 
-const ENDPOINT = 'https://schnetzler-contact.example.workers.dev/';
+const ENDPOINT = 'https://schnetzler-contact.benpeter.workers.dev/';
 
 const FIELDS = [
   ['name', 'your-name'],
