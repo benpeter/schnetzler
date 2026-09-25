@@ -3,11 +3,37 @@ import {
 } from '../../scripts/scripts.js';
 
 const ROTATE_MS = 6000;
+// without any interaction, the rotation starts this long after the delayed phase
+const IDLE_START_MS = 8000;
+const INTERACTIONS = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'wheel'];
+
+/**
+ * Calls fn once, on the visitor's first interaction or after the idle fallback,
+ * whichever comes first (never before the delayed phase).
+ * @param {Function} fn The callback
+ */
+function onEngaged(fn) {
+  let done = false;
+  let timer;
+  const run = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    INTERACTIONS.forEach((type) => window.removeEventListener(type, run));
+    fn();
+  };
+  onDelayed(() => {
+    const options = { passive: true, once: true };
+    INTERACTIONS.forEach((type) => window.addEventListener(type, run, options));
+    timer = setTimeout(run, IDLE_START_MS);
+  });
+}
 
 /**
  * Crossfades through the hero images; pausable and off for reduced motion.
- * Only the first image is part of the initial page; the others are added and the
- * rotation starts in the delayed phase, so they never compete with the LCP image.
+ * Only the first image is part of the initial page. The others are fetched and the
+ * rotation starts once the visitor engages (or after an idle fallback), so nothing in
+ * the hero changes while the page is still loading.
  * @param {Element} media The media container
  * @param {Element[]} pictures The pictures to rotate (first one already in media)
  */
@@ -43,18 +69,24 @@ function rotate(media, pictures) {
   setState(true);
   media.append(button);
 
-  onDelayed(() => {
-    pictures.slice(1).forEach((pic) => {
+  onEngaged(() => {
+    const loads = pictures.slice(1).map((pic) => {
       setResponsiveSources(pic, HERO_IMAGE_WIDTHS, HERO_IMAGE_SIZES);
       const img = pic.querySelector('img');
-      if (img) {
-        img.loading = 'eager';
-        img.decoding = 'async';
-      }
       button.before(pic);
+      if (!img) return Promise.resolve();
+      img.loading = 'eager';
+      img.decoding = 'async';
+      // the first switch waits for the next image, so a fade never shows a half-loaded image
+      return img.complete ? Promise.resolve() : new Promise((resolve) => {
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
     });
-    started = true;
-    if (playing) start();
+    loads[0].then(() => {
+      started = true;
+      if (playing) start();
+    });
   });
 }
 
