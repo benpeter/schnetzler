@@ -1,0 +1,8 @@
+{
+  "name": "schnetzler-contact",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
