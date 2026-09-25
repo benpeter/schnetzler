@@ -1,23 +1,12 @@
 .quotes {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   max-width: 880px;
   margin: 0 auto;
-  padding: 56px 28px 40px;
-  border-radius: var(--radius-l);
+  padding: 28px 24px 32px 28px;
+  border-left: 4px solid var(--color-primary);
+  border-radius: 0 var(--radius-m) var(--radius-m) 0;
   background: var(--color-primary-soft);
-  text-align: center;
-}
-
-.quotes::before {
-  content: '“';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  color: var(--color-primary);
-  font-family: var(--heading-font-family);
-  font-size: 6rem;
-  line-height: 1;
-  transform: translateX(-50%);
 }
 
 .quotes .quotes-list {
@@ -33,50 +22,92 @@
   display: none;
 }
 
+/* quote text: italic serif at reading size */
 .quotes blockquote {
   margin: 0;
   padding: 0;
   border: 0;
+  color: var(--color-ink); /* 12.9:1 on the panel */
   font-family: var(--heading-font-family);
-  font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  font-size: clamp(1.1875rem, 1.1rem + 0.45vw, 1.4375rem);
   font-style: italic;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.6;
+  hanging-punctuation: first;
+  hyphenate-limit-chars: 12 5 5;
 }
 
 .quotes blockquote p {
-  margin: 0 0 0.5em;
-  text-wrap: balance;
+  max-width: 40rem;
+  margin: 0 0 0.6em;
+  text-wrap: pretty;
 }
 
+.quotes blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* German quotation marks for authored quotes that carry none */
+.quotes blockquote.quotes-add-marks p:first-child::before {
+  content: '„';
+}
+
+.quotes blockquote.quotes-add-marks p:last-child::after {
+  content: '“';
+}
+
+/* attribution: name as a small letter-spaced capitals line, context below */
 .quotes figcaption {
-  max-width: 36rem;
-  margin: 20px auto 0;
-  color: var(--color-muted);
-  font-size: var(--body-font-size-s);
+  max-width: 40rem;
+  margin-top: 20px;
+  font-family: var(--body-font-family);
+  line-height: 1.5;
 }
 
-.quotes figcaption::before {
-  content: '';
-  display: block;
-  width: 32px;
-  height: 2px;
-  margin: 0 auto 14px;
-  background: var(--color-accent);
+.quotes cite {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-style: normal;
 }
 
+.quotes .quotes-name {
+  color: var(--color-primary-dark); /* 10.9:1 on the panel */
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quotes .quotes-context {
+  color: var(--color-muted); /* 6.2:1 on the panel */
+  font-size: var(--body-font-size-xs);
+}
+
+/* the comma joining name and context is only for assistive technology */
+.quotes .quotes-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* stepping controls sit above the quote, so they stay put as quotes change length */
 .quotes .quotes-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 28px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .quotes .quotes-status {
-  min-width: 8em;
-  margin: 0;
+  margin: 0 auto 0 0;
   color: var(--color-muted);
   font-size: var(--body-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .quotes .quotes-controls button {
@@ -118,6 +149,10 @@
 
 @media (width >= 900px) {
   .quotes {
-    padding: 72px 64px 48px;
+    padding: 40px 56px 44px 48px;
+  }
+
+  .quotes figcaption {
+    margin-top: 24px;
   }
 }
