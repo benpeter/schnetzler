@@ -38,6 +38,35 @@ if (window.trustedTypes && window.trustedTypes.createPolicy) {
 }
 
 /**
+ * Local preview serves content below /content; production serves it from the root.
+ * @returns {string} '/content' in local preview, otherwise ''
+ */
+export function getContentRoot() {
+  return /^\/content(\/|$)/.test(window.location.pathname) ? '/content' : '';
+}
+
+/**
+ * Resolves a site path against the content root, e.g. /nav -> /content/nav locally.
+ * @param {string} path site-relative path
+ * @returns {string} resolved path
+ */
+export function resolveContentPath(path) {
+  const root = getContentRoot();
+  return root && !path.startsWith(`${root}/`) ? `${root}${path === '/' ? '/' : path}` : path;
+}
+
+/**
+ * Prefixes site-relative links with the content root (local preview only).
+ * @param {Element} container The container element
+ */
+export function localizeLinks(container) {
+  if (!getContentRoot()) return;
+  container.querySelectorAll('a[href^="/"]:not([href^="//"])').forEach((a) => {
+    a.setAttribute('href', resolveContentPath(a.getAttribute('href')));
+  });
+}
+
+/**
  * load fonts.css and set a session storage flag
  */
 async function loadFonts() {
@@ -74,11 +103,28 @@ function buildWidgetAutoBlocks(main) {
 }
 
 /**
+ * Moves the leading page heading of pages without a hero into its own
+ * "page-title" section so it can be styled as a title band.
+ * @param {Element} main The container element
+ */
+function buildPageTitleSection(main) {
+  if (main.querySelector('.hero')) return;
+  const first = main.querySelector(':scope > div');
+  const h1 = first && first.firstElementChild;
+  if (!h1 || h1.tagName !== 'H1') return;
+  const section = document.createElement('div');
+  section.className = 'page-title';
+  section.append(h1);
+  main.prepend(section);
+}
+
+/**
  * Builds all synthetic blocks in a container element.
  * @param {Element} main The container element
  */
 function buildAutoBlocks(main) {
   try {
+    if (main.closest('body > main')) buildPageTitleSection(main);
     // auto load `*/fragments/*` references
     const fragments = [...main.querySelectorAll('a[href*="/fragments/"]')].filter((f) => !f.closest('.fragment'));
     if (fragments.length > 0) {
@@ -143,16 +189,30 @@ function decorateButtons(main) {
 }
 
 /**
+ * Marks paragraphs that start with an image followed by text, so the image can float beside it.
+ * @param {Element} main The container element
+ */
+function decorateInlineImages(main) {
+  main.querySelectorAll('p > picture:first-child').forEach((pic) => {
+    const p = pic.parentElement;
+    const text = [...p.childNodes].filter((n) => n !== pic).map((n) => n.textContent).join('').trim();
+    if (text) p.classList.add('has-inline-image');
+  });
+}
+
+/**
  * Decorates the main element.
  * @param {Element} main The main element
  */
 // eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
+  localizeLinks(main);
   decorateIcons(main);
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
   decorateButtons(main);
+  decorateInlineImages(main);
 }
 
 /**
@@ -160,10 +220,16 @@ export function decorateMain(main) {
  * @param {Element} doc The container element
  */
 async function loadEager(doc) {
-  document.documentElement.lang = 'en';
+  document.documentElement.lang = 'de';
   decorateTemplateAndTheme();
   const main = doc.querySelector('main');
   if (main) {
+    main.id = 'main';
+    const skip = document.createElement('a');
+    skip.className = 'skip-link';
+    skip.href = '#main';
+    skip.textContent = 'Zum Inhalt springen';
+    doc.body.prepend(skip);
     decorateMain(main);
     document.body.classList.add('appear');
     await loadSection(main.querySelector('.section'), waitForFirstImage);

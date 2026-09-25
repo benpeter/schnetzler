@@ -1,0 +1,155 @@
+{
+  "metadata": {
+    "projectType": "da"
+  },
+  "templates": [
+    {
+      "name": "home",
+      "urls": [
+        "https://www.praxis-schnetzler.de/"
+      ],
+      "representativeUrl": "https://www.praxis-schnetzler.de/",
+      "description": "Homepage: photo hero with practice name, tagline and appointment CTA, welcome intro in columns, two videos and a quote",
+      "urlPattern": "/",
+      "blocks": [
+        {
+          "name": "hero-home",
+          "instances": [
+            "#myCarousel"
+          ]
+        },
+        {
+          "name": "columns-intro",
+          "instances": [
+            ".entry-content > .container > .row:has(> .col-md-2)"
+          ]
+        },
+        {
+          "name": "embed-video",
+          "instances": [
+            ".entry-content > figure.wp-block-embed",
+            ".entry-content > .wp-video"
+          ]
+        },
+        {
+          "name": "quotes-rotating",
+          "instances": [
+            ".entry-content > blockquote.quotescollection-quote"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "1",
+          "name": "hero",
+          "selector": [
+            "#myCarousel"
+          ],
+          "style": null,
+          "blocks": [
+            "hero-home"
+          ],
+          "defaultContent": []
+        },
+        {
+          "id": "2",
+          "name": "welcome",
+          "selector": [
+            "article.page"
+          ],
+          "style": null,
+          "blocks": [
+            "columns-intro",
+            "embed-video",
+            "quotes-rotating"
+          ],
+          "defaultContent": [
+            ".entry-title",
+            ".entry-content h3"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "content-page",
+      "urls": [
+        "https://www.praxis-schnetzler.de/praxis",
+        "https://www.praxis-schnetzler.de/amerikanische-chiropraktik",
+        "https://www.praxis-schnetzler.de/klassische-homoeopathie",
+        "https://www.praxis-schnetzler.de/fragen",
+        "https://www.praxis-schnetzler.de/veroeffentlichungen",
+        "https://www.praxis-schnetzler.de/kontakt",
+        "https://www.praxis-schnetzler.de/impressum",
+        "https://www.praxis-schnetzler.de/datenschutz",
+        "https://www.praxis-schnetzler.de/test"
+      ],
+      "representativeUrl": "https://www.praxis-schnetzler.de/amerikanische-chiropraktik",
+      "description": "Standard WordPress page: page title plus rich text, optional floated image, optional column rows (contact options, intro with portrait and logos, book covers)",
+      "urlPattern": "/*",
+      "blocks": [
+        {
+          "name": "columns-intro",
+          "instances": [
+            ".entry-content > .container > .row:has(> .col-sm-2)"
+          ]
+        },
+        {
+          "name": "columns-contact",
+          "instances": [
+            ".entry-content > .container > .row:has(> .col-md-4)"
+          ]
+        },
+        {
+          "name": "cards-books",
+          "instances": [
+            ".entry-content > .container > .row:has(> .col-sm-6)"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "1",
+          "name": "page-content",
+          "selector": [
+            "article.page"
+          ],
+          "style": null,
+          "blocks": [
+            "columns-intro",
+            "columns-contact",
+            "cards-books"
+          ],
+          "defaultContent": [
+            ".entry-title",
+            ".entry-content"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "certificate-page",
+      "urls": [
+        "https://www.praxis-schnetzler.de/vitamin-d-coach"
+      ],
+      "representativeUrl": "https://www.praxis-schnetzler.de/vitamin-d-coach",
+      "description": "Page title plus a single certificate image",
+      "urlPattern": "/*",
+      "blocks": [],
+      "sections": [
+        {
+          "id": "1",
+          "name": "page-content",
+          "selector": [
+            "article.page"
+          ],
+          "style": null,
+          "blocks": [],
+          "defaultContent": [
+            ".entry-title",
+            ".entry-content figure"
+          ]
+        }
+      ]
+    }
+  ]
+}
