@@ -1,11 +1,19 @@
-const BRANCH_ORIGIN = /^https:\/\/[a-z0-9-]+--schnetzler--benpeter\.aem\.(page|live)$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const LIMITS = { name: 200, email: 200, subject: 200, message: 5000 };
+const LIMITS = {
+  name: 200, email: 200, subject: 200, message: 5000,
+};
+
+function originPattern(entry) {
+  const escaped = entry.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[a-z0-9-]+');
+  return new RegExp(`^${escaped}$`);
+}
 
 function allowedOrigin(origin, env) {
   if (!origin) return false;
-  if (BRANCH_ORIGIN.test(origin)) return true;
-  return (env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).includes(origin);
+  return (env.ALLOWED_ORIGINS || '').split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .some((o) => originPattern(o).test(origin));
 }
 
 function cors(origin) {
@@ -43,6 +51,10 @@ export default {
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
     if (request.method !== 'POST') return reply(405, { ok: false, error: 'method not allowed' }, headers);
+    if (!env.RESEND_API_KEY || !env.MAIL_FROM || !env.MAIL_TO) {
+      console.error('missing RESEND_API_KEY, MAIL_FROM or MAIL_TO');
+      return reply(500, { ok: false, error: 'not configured' }, headers);
+    }
 
     let raw;
     try {

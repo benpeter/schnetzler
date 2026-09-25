@@ -2,10 +2,5 @@
   "name": "schnetzler-contact",
   "main": "src/index.js",
   "compatibility_date": "2026-09-15",
-  "observability": { "enabled": true },
-  "vars": {
-    "MAIL_TO": "bp@ben-peter.com",
-    "MAIL_FROM": "",
-    "ALLOWED_ORIGINS": "https://www.praxis-schnetzler.de,https://praxis-schnetzler.de"
-  }
+  "observability": { "enabled": true }
 }

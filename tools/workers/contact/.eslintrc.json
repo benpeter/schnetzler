@@ -1,0 +1,4 @@
+{
+  "env": { "es2022": true, "worker": true, "node": true },
+  "rules": { "no-console": "off" }
+}

@@ -78,13 +78,13 @@ test('subject is optional', async () => {
   assert.match(calls[0].body.subject, /Kontaktformular/);
 });
 
-for (const field of ['name', 'email', 'message']) {
+['name', 'email', 'message'].forEach((field) => {
   test(`missing ${field} is rejected without sending`, async () => {
     const res = await post({ ...valid, [field]: '  ' });
     assert.equal(res.status, 400);
     assert.equal(calls.length, 0);
   });
-}
+});
 
 test('invalid email is rejected', async () => {
   const res = await post({ ...valid, email: 'not-an-email' });
@@ -126,11 +126,14 @@ test('wildcard origin matches any branch', async () => {
 });
 
 test('wildcard does not match across dots or other sites', async () => {
-  for (const origin of ['https://a.b--site--org.aem.page', 'https://main--site--other.aem.page', 'https://main--site--org.aem.page.evil.example']) {
-    // eslint-disable-next-line no-await-in-loop
-    const res = await post(valid, { origin });
-    assert.equal(res.status, 403, origin);
-  }
+  const origins = [
+    'https://a.b--site--org.aem.page',
+    'https://main--site--other.aem.page',
+    'https://main--site--org.aem.page.evil.example',
+  ];
+  const responses = await Promise.all(origins.map((origin) => post(valid, { origin })));
+  const statuses = responses.map((r) => r.status);
+  assert.deepEqual(statuses, [403, 403, 403]);
   assert.equal(calls.length, 0);
 });
 
@@ -145,13 +148,13 @@ test('no origin is allowed when ALLOWED_ORIGINS is unset', async () => {
   assert.equal(res.status, 403);
 });
 
-for (const key of ['RESEND_API_KEY', 'MAIL_FROM', 'MAIL_TO']) {
+['RESEND_API_KEY', 'MAIL_FROM', 'MAIL_TO'].forEach((key) => {
   test(`missing ${key} answers 500 without sending`, async () => {
     const res = await post(valid, { cfg: { ...env, [key]: '' } });
     assert.equal(res.status, 500);
     assert.equal(calls.length, 0);
   });
-}
+});
 
 test('foreign origin is refused without sending', async () => {
   const res = await post(valid, { origin: 'https://evil.example' });
