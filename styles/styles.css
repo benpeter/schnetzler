@@ -361,6 +361,25 @@ main > .section:first-of-type {
   margin-top: 0;
 }
 
+/* sections below the first are laid out and painted only when they approach the viewport */
+main > .section:not(:first-of-type, .light, .highlight, .sand, .soft) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 800px;
+  overflow-clip-margin: 48px;
+}
+
+/* containment stops edge margins from collapsing into the section margin; section margins are
+   always larger than these, so dropping them reproduces the collapsed result exactly */
+main > .section:not(:first-of-type, .light, .highlight, .sand, .soft) > div:first-child > :first-child,
+main > .section:not(:first-of-type, .light, .highlight, .sand, .soft) > div:first-child > :is(blockquote, ul, ol, figure):first-child > :first-child {
+  margin-top: 0;
+}
+
+main > .section:not(:first-of-type, .light, .highlight, .sand, .soft) > div:last-child > :last-child,
+main > .section:not(:first-of-type, .light, .highlight, .sand, .soft) > div:last-child > :is(blockquote, ul, ol, figure):last-child > :last-child {
+  margin-bottom: 0;
+}
+
 main > .section:last-of-type {
   margin-bottom: 96px;
 }
