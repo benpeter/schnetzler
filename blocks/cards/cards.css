@@ -1,4 +1,3 @@
-/* stylelint-disable no-descending-specificity -- variant rules are grouped by variant, not by specificity */
 .cards > ul {
   list-style: none;
   margin: 0;
@@ -33,61 +32,4 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-}
-
-/* books: cover on a sand backdrop, title below */
-.cards.books > ul {
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-}
-
-.cards.books > ul > li {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.cards.books > ul > li:hover {
-  box-shadow: var(--shadow-m);
-  transform: translateY(-2px);
-}
-
-.cards.books .cards-card-image {
-  display: flex;
-  justify-content: center;
-  padding: 32px 24px;
-  background: var(--color-sand);
-}
-
-.cards.books > ul > li img {
-  width: auto;
-  max-width: 100%;
-  height: 240px;
-  aspect-ratio: auto;
-  object-fit: contain;
-  border-radius: 4px;
-  box-shadow: 0 8px 24px rgb(27 42 41 / 22%);
-}
-
-.cards.books .cards-card-body {
-  font-family: var(--heading-font-family);
-  font-size: 1.0625rem;
-  line-height: 1.4;
-}
-
-.cards.books .cards-card-body a:any-link {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.cards.books .cards-card-body a:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-/* the whole card is clickable via its title link */
-.cards.books .cards-card-body a::after {
-  content: '';
-  position: absolute;
-  inset: 0;
 }

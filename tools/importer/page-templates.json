@@ -80,19 +80,12 @@
         "https://www.praxis-schnetzler.de/veroeffentlichungen",
         "https://www.praxis-schnetzler.de/kontakt",
         "https://www.praxis-schnetzler.de/impressum",
-        "https://www.praxis-schnetzler.de/datenschutz",
-        "https://www.praxis-schnetzler.de/test"
+        "https://www.praxis-schnetzler.de/datenschutz"
       ],
       "representativeUrl": "https://www.praxis-schnetzler.de/amerikanische-chiropraktik",
-      "description": "Standard WordPress page: page title plus rich text, optional floated image, optional column rows (contact options, intro with portrait and logos, book covers)",
+      "description": "Standard WordPress page: page title plus rich text, optional floated image, optional contact option columns and contact form",
       "urlPattern": "/*",
       "blocks": [
-        {
-          "name": "columns-intro",
-          "instances": [
-            ".entry-content > .container > .row:has(> .col-sm-2)"
-          ]
-        },
         {
           "name": "columns-contact",
           "instances": [
@@ -100,9 +93,9 @@
           ]
         },
         {
-          "name": "cards-books",
+          "name": "contact-form",
           "instances": [
-            ".entry-content > .container > .row:has(> .col-sm-6)"
+            ".entry-content div.wpcf7"
           ]
         }
       ],
@@ -115,9 +108,8 @@
           ],
           "style": null,
           "blocks": [
-            "columns-intro",
             "columns-contact",
-            "cards-books"
+            "contact-form"
           ],
           "defaultContent": [
             ".entry-title",

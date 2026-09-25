@@ -11,7 +11,7 @@
  *   - a.skip-link.screen-reader-text          (skip link)
  *   - footer.entry-footer                     (empty WP entry footer)
  *   - .wp-video .mejs-container / .mejs-*     (MediaElement.js player chrome)
- *   - div.wpcf7 / form.wpcf7-form             (Contact Form 7, /kontakt)
+ *   - div.wpcf7 / form.wpcf7-form             (Contact Form 7, /kontakt: moved out of its column for the contact-form parser)
  *   - i.fa                                    (Font Awesome icons, hero CTA + /kontakt)
  *   - .entry-content > .container > .row > [class*="col-"]  (Bootstrap layout wrappers)
  *   - body.home article h1.entry-title        (homepage article title)
@@ -116,19 +116,18 @@ function cleanMediaElement(element) {
   WebImporter.DOMUtils.remove(element, ['.mejs-offscreen', '[class*="mejs-"]']);
 }
 
-function replaceContactForm(element, doc) {
-  const forms = [...element.querySelectorAll('div.wpcf7')];
-  element.querySelectorAll('form.wpcf7-form').forEach((form) => {
-    if (!form.closest('div.wpcf7')) forms.push(form);
+function hoistContactForm(element) {
+  // Contact Form 7 sits inside a contact column. Blocks cannot nest, so the form moves
+  // right after its column row, where the contact-form parser turns it into its own block.
+  // Empty CF7 placeholders (no <form>) are dropped.
+  element.querySelectorAll('div.wpcf7').forEach((wrapper) => {
+    if (!wrapper.querySelector('form')) {
+      wrapper.remove();
+      return;
+    }
+    const row = wrapper.closest('.row');
+    if (row) row.after(wrapper);
   });
-  if (!forms.length) return;
-  const p = doc.createElement('p');
-  const a = doc.createElement('a');
-  a.href = `mailto:${EMAIL}`;
-  a.textContent = 'E-Mail schreiben';
-  p.appendChild(a);
-  forms[0].replaceWith(p);
-  forms.slice(1).forEach((f) => f.remove());
 }
 
 function removeHoneypotText(element, doc) {
@@ -258,13 +257,6 @@ function removeLeadingBreaks(element) {
   });
 }
 
-function removeFormReferences(element) {
-  // The contact form is replaced by a mailto link; its lead-in sentence would point at nothing.
-  element.querySelectorAll('p').forEach((p) => {
-    if (/^oder einfach das folgende Formular ausfüllen und abschicken:?$/.test(p.textContent.trim())) p.remove();
-  });
-}
-
 function relativizeInternalLinks(element) {
   element.querySelectorAll('a[href]').forEach((a) => {
     const href = a.getAttribute('href');
@@ -341,7 +333,7 @@ export default function transform(hookName, element, payload) {
     // Chrome that would otherwise leak into block parsing
     WebImporter.DOMUtils.remove(element, ['a.carousel-control', 'i.fa']);
     cleanMediaElement(element);
-    replaceContactForm(element, doc);
+    hoistContactForm(element);
     removeHoneypotText(element, doc);
 
     fixImages(element);
@@ -370,7 +362,6 @@ export default function transform(hookName, element, payload) {
     ]);
     removeComments(element, doc);
     removeHoneypotText(element, doc);
-    removeFormReferences(element);
     relativizeInternalLinks(element);
     removeEmptyParagraphs(element);
 

@@ -2,9 +2,8 @@
 /* global WebImporter */
 
 // PARSER IMPORTS
-import columnsIntroParser from './parsers/columns-intro.js';
 import columnsContactParser from './parsers/columns-contact.js';
-import cardsBooksParser from './parsers/cards-books.js';
+import contactFormParser from './parsers/contact-form.js';
 
 // TRANSFORMER IMPORTS
 import praxisSchnetzlerCleanupTransformer from './transformers/praxis-schnetzler-cleanup.js';
@@ -13,15 +12,14 @@ import praxisSchnetzlerMetadataTransformer from './transformers/praxis-schnetzle
 
 // PARSER REGISTRY
 const parsers = {
-  'columns-intro': columnsIntroParser,
   'columns-contact': columnsContactParser,
-  'cards-books': cardsBooksParser,
+  'contact-form': contactFormParser,
 };
 
 // PAGE TEMPLATE CONFIGURATION - Embedded from page-templates.json
 const PAGE_TEMPLATE = {
   "name": "content-page",
-  "description": "Standard WordPress page: page title plus rich text, optional floated image, optional column rows (contact options, intro with portrait and logos, book covers)",
+  "description": "Standard WordPress page: page title plus rich text, optional floated image, optional contact option columns and contact form",
   "urls": [
     "https://www.praxis-schnetzler.de/praxis",
     "https://www.praxis-schnetzler.de/amerikanische-chiropraktik",
@@ -30,16 +28,9 @@ const PAGE_TEMPLATE = {
     "https://www.praxis-schnetzler.de/veroeffentlichungen",
     "https://www.praxis-schnetzler.de/kontakt",
     "https://www.praxis-schnetzler.de/impressum",
-    "https://www.praxis-schnetzler.de/datenschutz",
-    "https://www.praxis-schnetzler.de/test"
+    "https://www.praxis-schnetzler.de/datenschutz"
   ],
   "blocks": [
-    {
-      "name": "columns-intro",
-      "instances": [
-        ".entry-content > .container > .row:has(> .col-sm-2)"
-      ]
-    },
     {
       "name": "columns-contact",
       "instances": [
@@ -47,9 +38,9 @@ const PAGE_TEMPLATE = {
       ]
     },
     {
-      "name": "cards-books",
+      "name": "contact-form",
       "instances": [
-        ".entry-content > .container > .row:has(> .col-sm-6)"
+        ".entry-content div.wpcf7"
       ]
     }
   ],
@@ -62,9 +53,8 @@ const PAGE_TEMPLATE = {
       ],
       "style": null,
       "blocks": [
-        "columns-intro",
         "columns-contact",
-        "cards-books"
+        "contact-form"
       ],
       "defaultContent": [
         ".entry-title",

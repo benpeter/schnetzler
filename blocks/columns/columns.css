@@ -219,11 +219,6 @@
   font-size: var(--body-font-size-s);
 }
 
-.columns.contact .button-wrapper {
-  margin-top: auto;
-  padding-top: 8px;
-}
-
 .columns.contact img {
   width: auto;
   max-width: 200px;

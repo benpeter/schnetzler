@@ -31,13 +31,6 @@ export default function decorate(block) {
 
       if (block.classList.contains('contact')) {
         col.classList.add('columns-contact-card', `columns-contact-${contactType(col)}`);
-        // a paragraph holding only an email link is the primary action of its card
-        col.querySelectorAll('p > a[href^="mailto:"]:only-child').forEach((a) => {
-          const p = a.parentElement;
-          if (p.textContent.trim() !== a.textContent.trim() || p.closest('h1, h2, h3, h4, h5, h6')) return;
-          a.className = 'button primary';
-          p.className = 'button-wrapper';
-        });
       }
     });
   });

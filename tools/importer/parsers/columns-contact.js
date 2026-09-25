@@ -7,19 +7,17 @@
  *
  * Output table (DA block name "Columns (contact)"): one row, one cell per .col-md-4 (3 cells).
  * Each cell keeps its headings (levels as left by the cleanup transformer's heading
- * normalization), paragraphs, links (tel:/mailto: added by cleanup), the mailto paragraph
- * that replaced the Contact Form 7 form, and the linked jameda logo.
+ * normalization), paragraphs, links (tel:/mailto: added by cleanup) and the linked jameda logo.
+ * The Contact Form 7 form is not part of this block: it becomes its own contact-form block.
  *
  * Selectors verified in migration-work/block-context/columns-contact/source.html:
  *   .row > .col-md-4 (x3), h3 / h4 / p, div.wpcf7 > form.wpcf7-form, p > a > img (jameda)
  * Iteration is keyed on the column <div>s (block-level, never nested), not on anchors.
  *
  * Defensive fallbacks (normally already done by praxis-schnetzler-cleanup.js beforeTransform):
- *   - a remaining Contact Form 7 widget is replaced by the same mailto paragraph
+ *   - a Contact Form 7 widget still inside a column is moved after the row (contact-form parser)
  *   - Font Awesome <i> icons and the "[honeypot website]" shortcode text are dropped
  */
-const EMAIL = 'info@praxis-schnetzler.de';
-
 export default function parse(element, { document }) {
   let columns = [...element.querySelectorAll(':scope > [class*="col-"]')];
   if (!columns.length) columns = [...element.children];
@@ -29,20 +27,8 @@ export default function parse(element, { document }) {
     && !node.textContent.replace(/ /g, ' ').trim();
 
   const buildCell = (col) => {
-    // Form fallback: mirror the cleanup transformer (first widget -> mailto paragraph).
-    const forms = [...col.querySelectorAll('div.wpcf7')];
-    col.querySelectorAll('form').forEach((form) => {
-      if (!form.closest('div.wpcf7')) forms.push(form);
-    });
-    if (forms.length) {
-      const p = document.createElement('p');
-      const a = document.createElement('a');
-      a.href = `mailto:${EMAIL}`;
-      a.textContent = 'E-Mail schreiben';
-      p.append(a);
-      forms[0].replaceWith(p);
-      forms.slice(1).forEach((f) => f.remove());
-    }
+    // Blocks cannot nest: move a form that is still inside the column after the row.
+    col.querySelectorAll('div.wpcf7').forEach((form) => element.after(form));
     col.querySelectorAll('i.fa, i[class*="fa-"]').forEach((icon) => icon.remove());
 
     const nodes = [];
