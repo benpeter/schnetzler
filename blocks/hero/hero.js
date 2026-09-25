@@ -4,7 +4,7 @@ import {
 
 const ROTATE_MS = 6000;
 // without any interaction, the rotation starts this long after the delayed phase
-const IDLE_START_MS = 8000;
+const IDLE_START_MS = 20000;
 const INTERACTIONS = ['pointerdown', 'pointermove', 'keydown', 'scroll', 'touchstart', 'wheel'];
 
 /**
@@ -120,7 +120,7 @@ export default function decorate(block) {
   pictures.forEach((pic, i) => {
     pic.classList.add('hero-image');
     if (i === 0) pic.classList.add('is-active');
-    else pic.remove(); // added back in the delayed phase
+    else pic.remove(); // added back once the rotation starts
   });
   if (pictures[0]) media.append(pictures[0]);
 
