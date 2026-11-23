@@ -1,9 +1,19 @@
-import { test, beforeEach, afterEach } from 'node:test';
+import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../src/index.js';
 
+let calls;
+let sendError;
+const EMAIL = {
+  async send(message) {
+    if (sendError) throw sendError;
+    calls.push(message);
+    return { messageId: 'x' };
+  },
+};
+
 const env = {
-  RESEND_API_KEY: 're_test',
+  EMAIL,
   MAIL_FROM: 'Practice <contact@example.com>',
   MAIL_TO: 'a@example.com,b@example.com',
   ALLOWED_ORIGINS: 'https://*--site--org.aem.page, https://*--site--org.aem.live,https://www.example.com',
@@ -17,21 +27,9 @@ const valid = {
   message: 'Ich hätte gern einen Termin.',
 };
 
-let calls;
-let resendStatus;
-const realFetch = globalThis.fetch;
-
 beforeEach(() => {
   calls = [];
-  resendStatus = 200;
-  globalThis.fetch = async (url, init) => {
-    calls.push({ url, init, body: JSON.parse(init.body) });
-    return new Response(JSON.stringify({ id: 'x' }), { status: resendStatus });
-  };
-});
-
-afterEach(() => {
-  globalThis.fetch = realFetch;
+  sendError = undefined;
 });
 
 function post(body, { origin = ORIGIN, type = 'json', cfg = env } = {}) {
@@ -52,17 +50,20 @@ test('valid JSON submission sends one email to every recipient', async () => {
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), { ok: true });
   assert.equal(calls.length, 1);
-  const { url, init, body } = calls[0];
-  assert.equal(url, 'https://api.resend.com/emails');
-  assert.equal(init.method, 'POST');
-  assert.equal(init.headers.authorization, 'Bearer re_test');
-  assert.equal(body.from, env.MAIL_FROM);
-  assert.deepEqual(body.to, ['a@example.com', 'b@example.com']);
-  assert.equal(body.reply_to, 'erika@example.org');
-  assert.match(body.subject, /Termin/);
-  assert.match(body.text, /Erika Mustermann/);
-  assert.match(body.text, /erika@example\.org/);
-  assert.match(body.text, /Ich hätte gern einen Termin\./);
+  const [message] = calls;
+  assert.deepEqual(message.from, { email: 'contact@example.com', name: 'Practice' });
+  assert.deepEqual(message.to, ['a@example.com', 'b@example.com']);
+  assert.equal(message.replyTo, 'erika@example.org');
+  assert.match(message.subject, /Termin/);
+  assert.match(message.text, /Erika Mustermann/);
+  assert.match(message.text, /erika@example\.org/);
+  assert.match(message.text, /Ich hätte gern einen Termin\./);
+});
+
+test('sender without display name is passed as plain address', async () => {
+  const res = await post(valid, { cfg: { ...env, MAIL_FROM: 'contact@example.com' } });
+  assert.equal(res.status, 200);
+  assert.equal(calls[0].from, 'contact@example.com');
 });
 
 test('form-urlencoded submission is accepted', async () => {
@@ -75,7 +76,7 @@ test('subject is optional', async () => {
   const { subject, ...rest } = valid;
   const res = await post(rest);
   assert.equal(res.status, 200);
-  assert.match(calls[0].body.subject, /Kontaktformular/);
+  assert.match(calls[0].subject, /Kontaktformular/);
 });
 
 ['name', 'email', 'message'].forEach((field) => {
@@ -100,7 +101,7 @@ test('overlong message is rejected', async () => {
 
 test('newline in subject cannot inject headers', async () => {
   await post({ ...valid, subject: 'Hi\r\nBcc: evil@example.com' });
-  assert.doesNotMatch(calls[0].body.subject, /[\r\n]/);
+  assert.doesNotMatch(calls[0].subject, /[\r\n]/);
 });
 
 test('filled honeypot answers ok and sends nothing', async () => {
@@ -109,8 +110,8 @@ test('filled honeypot answers ok and sends nothing', async () => {
   assert.equal(calls.length, 0);
 });
 
-test('Resend failure answers 502', async () => {
-  resendStatus = 500;
+test('send failure answers 502', async () => {
+  sendError = Object.assign(new Error('could not deliver'), { code: 'E_DELIVERY_FAILED' });
   const res = await post(valid);
   assert.equal(res.status, 502);
 });
@@ -148,7 +149,7 @@ test('no origin is allowed when ALLOWED_ORIGINS is unset', async () => {
   assert.equal(res.status, 403);
 });
 
-['RESEND_API_KEY', 'MAIL_FROM', 'MAIL_TO'].forEach((key) => {
+['EMAIL', 'MAIL_FROM', 'MAIL_TO'].forEach((key) => {
   test(`missing ${key} answers 500 without sending`, async () => {
     const res = await post(valid, { cfg: { ...env, [key]: '' } });
     assert.equal(res.status, 500);
