@@ -9,6 +9,7 @@ import {
   loadSection,
   loadSections,
   loadCSS,
+  loadScript,
   buildBlock,
 } from './aem.js';
 
@@ -325,6 +326,18 @@ async function loadLazy(doc) {
 }
 
 /**
+ * Loads Cloudflare Web Analytics (cookieless page view counts) on the production host only,
+ * so previews and local development stay out of the statistics.
+ */
+function loadWebAnalytics() {
+  if (window.location.hostname !== 'www.praxis-schnetzler.de') return;
+  loadScript('https://static.cloudflareinsights.com/beacon.min.js', {
+    defer: '',
+    'data-cf-beacon': JSON.stringify({ token: '7e660c95402b4055b1a66bb16f73f890' }),
+  });
+}
+
+/**
  * Loads everything that happens a lot later,
  * without impacting the user experience.
  */
@@ -333,6 +346,7 @@ function loadDelayed() {
     window.hlx.delayedPhase = true;
     document.dispatchEvent(new CustomEvent('aem:delayed'));
     import('./consent-check.js');
+    loadWebAnalytics();
     // load anything that can be postponed to the latest here
   }, 3000);
 }
