@@ -43,6 +43,11 @@ function clean(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function sender(value) {
+  const match = value.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  return match ? { email: match[2], name: match[1] } : value.trim();
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('origin');
@@ -51,8 +56,8 @@ export default {
 
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
     if (request.method !== 'POST') return reply(405, { ok: false, error: 'method not allowed' }, headers);
-    if (!env.RESEND_API_KEY || !env.MAIL_FROM || !env.MAIL_TO) {
-      console.error('missing RESEND_API_KEY, MAIL_FROM or MAIL_TO');
+    if (!env.EMAIL || !env.MAIL_FROM || !env.MAIL_TO) {
+      console.error('missing EMAIL binding, MAIL_FROM or MAIL_TO');
       return reply(500, { ok: false, error: 'not configured' }, headers);
     }
 
@@ -81,23 +86,16 @@ export default {
       fields.message,
     ].join('\n');
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${env.RESEND_API_KEY}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: env.MAIL_FROM,
+    try {
+      await env.EMAIL.send({
+        from: sender(env.MAIL_FROM),
         to: env.MAIL_TO.split(',').map((t) => t.trim()),
-        reply_to: fields.email,
+        replyTo: fields.email,
         subject,
         text,
-      }),
-    });
-
-    if (!res.ok) {
-      console.error('resend failed', res.status, await res.text());
+      });
+    } catch (e) {
+      console.error('send failed', e.code, e.message);
       return reply(502, { ok: false, error: 'send failed' }, headers);
     }
     return reply(200, { ok: true }, headers);
